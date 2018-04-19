@@ -40,15 +40,15 @@ int main(int argc, const char * argv[]) {
     Mat grad_x, grad_y , gradients_sobel ; // Mat images to develop sobel
     Mat cannyEdges ;
 
-    for(int i = 0 ; i < filenames.size() ; ++i){
+    for(int imageId = 0 ; imageId < filenames.size() ; ++imageId){
       
-        orig_frame = imread(pathtoData+filenames[i]+".png") ;
+        orig_frame = imread(pathtoData+filenames[imageId]+".png") ;
         if(orig_frame.empty()){
             std::cout << "She is empty, throwing exception" << std::endl ;
             //throw Exception() ;
         }
         
-        std::cout << "\n**** Reading Image at " << filenames[i] << " *******\n" << std::endl ;
+        std::cout << "\n**** Reading Image at " << filenames[imageId] << " *******\n" << std::endl ;
         
         imshow("Orig_Frame", orig_frame) ;
         char StartKey = waitKey() ;
@@ -156,6 +156,7 @@ int main(int argc, const char * argv[]) {
         
         int totalScoreAllCandidates = 0 ;
         
+        window.stepSlide = 2 ;
         
         
         for (int col = lane.laneBottomWidth/3 ; col  <= lane.laneBottomWidth - window_n_cols; col += window.stepSlide){
@@ -180,7 +181,6 @@ int main(int argc, const char * argv[]) {
                 Mat canny_of_window = cannyEdges(cannyWindow) ;
                 scoreIndivWindow = objectness(canny_of_window,gradients_sobel, bboxWindow, Point(cannyWindow.x,cannyWindow.y), gray_lanes) ;
                 scoreCandidate = std::pair<int,Rect>(scoreIndivWindow,bboxWindow) ;
-               
                 
                 bestofthree[counter_bbox] = scoreCandidate ;
           
@@ -203,7 +203,7 @@ int main(int argc, const char * argv[]) {
                 window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 
-                //waitKey() ; 
+                //waitKey() ;
     
             }
             /* OUTER For loop */
@@ -218,12 +218,7 @@ int main(int argc, const char * argv[]) {
             std::cout << "No candidate detected, noisy imaage" << std::endl ;
             continue ;
         }
-        
-//        for(int i = 0 ; i < candidates.size(); ++i){
-//
-//            std::cout  << "Candidate#: " << i << " br of candidate and score (" <<  candidates[i].first << ","
-//            << candidates[i].second.br() << ")" << "\n"  ;
-//        }
+
         std::cout << candidates.size() << std::endl ;
         Mat copy_orig ;
         
@@ -231,18 +226,40 @@ int main(int argc, const char * argv[]) {
         std::sort(candidates.begin(),candidates.end()
                   ,comp );
         
+        std::vector<Rect> topRectangles ; // For clustering
+        for(int i = 0 ; i < 25 ; ++i){
+            topRectangles.push_back(candidates[i].second);
+        }
+        groupRectangles(topRectangles, 2);
+        Mat orig_frame_copy ;
+        orig_frame.copyTo(orig_frame_copy);
         int greenLevel = 255 ;
-        for(int j = 0 ; j < 5 ; ++j){
+        for(int j = 0 ; j < topRectangles.size() ; ++j){
+            
+            
+            if (j == 0){
+                rectangle(orig_frame_copy, topRectangles[j].tl()+offsetROI,topRectangles[j].br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+            }else{
+                float ratio =  1 ;
+                greenLevel = greenLevel * (ratio) ;
+                rectangle(orig_frame_copy, topRectangles[j].tl()+offsetROI,topRectangles[j].br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+            }
+        }
+        namedWindow("clustering_rectanlges");
+        moveWindow("clustering_rectanlges", 0,nativeResolution.second-orig_frame_copy.rows) ;
+        imshow("clustering_rectanlges", orig_frame_copy);
+        greenLevel = 255 ;
+      
+            
+            
+        for(int j = 0 ; j < 25 ; ++j){
             
             if (j == 0){
                 rectangle(orig_frame, candidates[j].second.tl()+offsetROI,candidates[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
             }else{
-                
-                
-                //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
+
                 float ratio =  candidates[j].first / candidates[j-1].first ;
-                //std::cout << "ratio " << ratio << std::endl ;
-                
+
                 greenLevel = greenLevel * (ratio) ;
                 rectangle(orig_frame, candidates[j].second.tl()+offsetROI,candidates[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
             }

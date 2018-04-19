@@ -184,4 +184,39 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
     return score ;
 }
 
+int objectnessGivenContours(std::vector<std::vector<Point>> contours, Rect bound_box, Point offSet=Point(0,0) ){
+    int score  ;
+    
+    return score ;
+}
+
+int ROI_shrink(Mat& cannyEdges, Mat& sobelMagnitue, std::pair<int,Rect> candidate, Point offset) {
+    int current_score = candidate.first ;
+    int new_score ;
+    
+    std::vector<std::vector<Point>> contours ;
+    std::vector<Vec4i> hierarchyCannyContours ;
+    findContours(cannyEdges, contours, hierarchyCannyContours, CV_RETR_LIST,CV_CHAIN_APPROX_NONE ) ;
+    
+    new_score = current_score ;
+    
+    
+    Rect smallerBox(candidate.second) ;
+    
+    while (new_score >= current_score){
+        /* Shrink width and heigh of box by 1 pixel */
+        smallerBox.width = smallerBox.width -1 ;
+        smallerBox.height = smallerBox.height -1 ;
+        
+        
+        
+        
+        
+        
+    }
+    
+   
+    
+    return new_score ;
+}
 
