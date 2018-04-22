@@ -9,6 +9,16 @@
 #ifndef data_h
 #define data_h
 
+struct videoConfigProp{
+    
+    cv::String name ;
+    float bbound_largest_ratio  ;
+    float bbound_smallest_ratio  ;
+    int top_lane ; // chop of some sky
+    explicit videoConfigProp(cv::String n ,float largest, float smallest, int top=25): name(n),bbound_largest_ratio(largest),bbound_smallest_ratio(smallest),top_lane(top){}
+    
+};
+
 
 std::vector<cv::String> filenames = {"MIN50__1000000",
     "MIN50__1000012",
@@ -122,26 +132,21 @@ std::vector<cv::String> filenames = {"MIN50__1000000",
 //    "MIN50__1000001"
 //} ;
 
-std::vector<cv::String> videoNames = {
-    "video0",
-    "video1",
-    "video2",
-    "video3",
-    "video4",
-    "video5",
-    "video6",
-    "video7",
-    "video8",
-    "video9",
-    "video10",
-    "video11",
-    "video12",
-    "video13",
-    "video14"} ;
-
-
-
-
+std::vector<videoConfigProp> videoNames = {videoConfigProp("video1",3,4,100),
+    videoConfigProp("video4",3,2,100),
+    videoConfigProp("video2",1.8,3,100),
+    videoConfigProp("video3",3,2,100),
+    videoConfigProp("video10",2,1.5,25),
+    
+    videoConfigProp("video6",3,4,100),
+    videoConfigProp("video7",3,4,100),
+    videoConfigProp("video8",3,4,100),
+    videoConfigProp("video9",3,4,100),
+    videoConfigProp("video5",3,2,100),
+    videoConfigProp("video11",3,4,100),
+    videoConfigProp("video12",3,4,100),
+    videoConfigProp("video13",3,4,100),
+    videoConfigProp("video14",3,4,100)};
 
 
 #endif /* data_h */

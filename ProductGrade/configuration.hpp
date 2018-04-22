@@ -14,6 +14,7 @@ cv::String pathtoData = "/Users/josephlefebvre/Honours_Project/ViewnyxData/VYX_M
 
 cv::String path_video = "/Users/josephlefebvre/Honours_Project/ViewnyxData/video/Forward Leading/" ;
 
+
 // Constants for Sobel Edge Image
 int scale = 1 ;
 int delta = 0 ;
@@ -43,7 +44,7 @@ struct lane_coordinate{
     int laneHeight ;
     
     explicit lane_coordinate(int imageWidth,int wr=4,float r=0.75,int b=0,int t=25):  ratio_top_base(r),base_lane(b),top_lane(t),width_ratio(wr) {
-        bottomOffset = imageWidth/width_ratio ;
+        bottomOffset = imageWidth/width_ratio;
         topOffset_relToBottom = bottomOffset*(ratio_top_base) ;
         topOffset = bottomOffset + topOffset_relToBottom ;
         BottomLeft = cv::Point(bottomOffset,base_lane) ;

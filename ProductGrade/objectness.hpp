@@ -15,7 +15,7 @@
 
 extern std::pair<int, int> nativeResolution ;
 
-int objectness(cv::Mat&, cv::Mat&, cv::Rect, cv::Point, cv::Mat& src_original) ;
+int objectness(cv::Mat&, cv::Mat&, cv::Rect, cv::Point, cv::Mat& src_original, cv::Mat& pixelDifference) ;
 
 
 #endif /* objectness_hpp */

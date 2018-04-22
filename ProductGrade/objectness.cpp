@@ -8,26 +8,42 @@
 
 
 #include "objectness.hpp"
-
-
 using namespace cv ;
 
-std::pair<int, int> nativeResolution(1440,900) ;
+
+
+void my_mouse_callback_Mag(int event , int x , int y, int flags, void* params){
+    Mat* clickedImage = (Mat*) params ;
+    
+    switch( event ){
+        case CV_EVENT_MOUSEMOVE:
+            std::cout << "Pixel diff  @ " << x << " , " << y << "is : "
+            << int( clickedImage->at<uchar>(Point(x,y)) ) << std::endl ;
+            
+    }
+    
+}
+
+
+
+
 
 String path_objectnessVis = "/Users/josephlefebvre/Honours_Project/Demo/" ;
+std::pair<int, int> nativeResolution(1440,900) ;
 
-int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offset, Mat& src_original){
+int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offset, Mat& src_original, Mat& pixelDifference){
     std::vector<std::vector<Point>> contours ;
     std::vector<Vec4i> hierarchyCannyContours ;
     int perimeter_boundbox = (bound_box.width*2) + (bound_box.height*2) ;
     //std::cout << "Perimeter of box: " << perimeter_boundbox << std::endl ;
     int score = 0;
     
-    findContours(cannyEdges, contours, hierarchyCannyContours, CV_RETR_LIST,CV_CHAIN_APPROX_NONE ) ;
+    findContours(cannyEdges, contours, hierarchyCannyContours, CV_RETR_LIST,CV_CHAIN_APPROX_NONE ) ;    
     Mat contoursCanny = Mat::zeros(cannyEdges.rows,cannyEdges.cols,CV_8U) ;
     
     Mat contoursCannyNoCross = Mat::zeros(src_original.rows,src_original.cols,CV_8U) ;
-    //drawContours(contoursCanny, contours, -1, Scalar(255,0,0)) ;
+    drawContours(contoursCanny, contours, -1, Scalar(255,0,0)) ;
+    imshow("cannyEdges_w/outPixelDiff", contoursCanny) ; 
     cvtColor(contoursCanny, contoursCanny, CV_GRAY2BGR) ;
     cvtColor(contoursCannyNoCross, contoursCannyNoCross, CV_GRAY2BGR) ;
     //line(contoursCanny, Point(0,0), Point(100,100), Scalar(0,255,0)) ;
@@ -74,13 +90,13 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
     namedWindow("Canny_without_cross_onBLACK");
     moveWindow("Canny_without_cross_onBLACK", nativeResolution.first - copy.cols, copy.rows + 45) ;
     bool flag_score = true ;
-    int currentMax_IndivContour = 0 ;
-    int currentMin_IndivContour = 0 ;
+    
     
     for(int i = 0 ; i < contours.size() ; ++ i){
         // push in the contour and initalize score of individual contour
         scoreIndivContour = 0 ;
-        
+        int currentMax_IndivContour = 0 ;
+        int currentMin_IndivContour = 0 ;
         contoursWithOutCrossings.push_back(contours[i]);
         //std::cout << "A: CONTOURs remaining " << contoursWithOutCrossings.size() << std::endl ;
         for(int j = 0 ; j < contours[i].size(); ++j){
@@ -93,6 +109,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
             Point pointOnContour_relativeToLanes(pointOnContour.x
                                                  +offset.x,pointOnContour.y + offset.y) ;
             int sobel_at_point = sobelMagnitude.at<uchar>(pointOnContour_relativeToLanes) ;
+            int pixelDifference_at_point = pixelDifference.at<uchar>(pointOnContour_relativeToLanes) ;
             
             //std::cout << "On contour Id " << i << " @ " << pointOnContour << "Magnitude: " << (int) sobelMagnitude.at<uchar>(pointOnContour) <<  std::endl ;
             
@@ -109,6 +126,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                     flag_score = true ;
                     continue ;
                 }
+                
                 circle(copy,pointOnContour_relativeToLanes,1, Scalar(0,0,255) ) ;
                 //n        imshow("points",copy) ;
                 
@@ -133,11 +151,19 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                 
             }else{
                 if(flag_score ){
+//                    std::cout << pixelDifference_at_point << std::endl ;
+                    if(pixelDifference_at_point != 0){
+                        // std::cout << "moving object detected @ " << pointOnContour << std::endl ;
+                        circle(copy, pointOnContour_relativeToLanes, 6, Scalar(204,0,204));
+                        flag_score = false ;
+                        //break; // contour is part of an object that is moving really quickly
+                    }
+                   
                     if (sobel_at_point > currentMax_IndivContour){
                         currentMax_IndivContour = sobel_at_point ;
                     }
                     if(sobel_at_point < currentMin_IndivContour){
-                        currentMax_IndivContour = sobel_at_point ;
+                        currentMin_IndivContour = sobel_at_point ;
                     }
                     circle(copy, pointOnContour_relativeToLanes, 1, Scalar(0,255,0));
                     scoreIndivContour += sobelMagnitude.at<uchar>(pointOnContour_relativeToLanes) ;
@@ -170,7 +196,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
     //    moveWindow("Canny_without_cross", 0, nativeResolution.second - copy2.rows) ;
     putText(copy, std::to_string(score), bound_box.br(), FONT_HERSHEY_PLAIN, 1, Scalar(0,255,0)) ;
     //
-    
+    setMouseCallback("points", my_mouse_callback_Mag,(void*)& pixelDifference) ;
     imshow("points",copy) ;
     
     
