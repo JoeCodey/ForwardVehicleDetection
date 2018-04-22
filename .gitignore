@@ -19,8 +19,9 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata/!default.perspectivev3
-xcuserdatad
+xcuserdata/
+
+ProductGrade.xcodeproj/xcuserdata/josephlefebvre.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 
 ## Other
 *.moved-aside
