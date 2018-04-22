@@ -123,7 +123,8 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                     // Keep score of contour, don't remove if the point on the contours
                     // that is crossing the bounding box is of very low magnitue.
                     // will account for shadows and other small noise
-                    flag_score = true ;
+                    std::cout << "Contour saved " << std::endl ;
+                    flag_score = false  ;
                     continue ;
                 }
                 

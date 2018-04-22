@@ -238,6 +238,8 @@ int main(int argc, const char * argv[]) {
         addWeighted( grad_x, 0.5, grad_y, 0.5, 0, gradients_sobel ) ;
             
         //imshow("Sobel", gradients_sobel) ;
+                
+        
 
         std::pair<int,Rect> scoreCandidate ;
         std::pair<int,Rect>  bestofthree [3] ;
@@ -293,6 +295,7 @@ int main(int argc, const char * argv[]) {
 
                  canny_of_window = cannyEdges(cannyWindow) ;
                 scoreIndivWindow = objectness(canny_of_window,gradients_sobel, bboxWindow, Point(cannyWindow.x,cannyWindow.y), lanes_orig_frame,lanes_pixel_diff) ;
+                scoreIndivWindow += objectness(canny_of_window,grad_y, bboxWindow, Point(cannyWindow.x,cannyWindow.y), lanes_orig_frame,lanes_pixel_diff) ;
                 scoreCandidate = std::pair<int,Rect>(scoreIndivWindow,bboxWindow) ;
 
                 bestofthree[counter_bbox] = scoreCandidate ;
@@ -318,7 +321,7 @@ int main(int argc, const char * argv[]) {
                 window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 
-//                controlKey = waitKey(1); // MANUAL_CONTROL OF BOX
+                //controlKey = waitKey(1); // MANUAL_CONTROL OF BOX
                 
                 if(controlKey == 3){
                     row_save = row ;
@@ -388,80 +391,80 @@ int main(int argc, const char * argv[]) {
                waitKey();
               /* Increase candidate score if they posses a strong horizonatal line */
                 
-//
-//                std::vector<Vec4i> lines ;
-//                std::vector<Vec4i> candidateLines ;
-//                int lineThreshold = 15 , minLineLength = 15 , maxlineLength = 40 ;
-//                Mat thres_grad_y ;
-//                threshold(grad_y, thres_grad_y, 100, 255, THRESH_BINARY);
-//                HoughLinesP(thres_grad_y, lines, 1, CV_PI/2, lineThreshold,minLineLength,0);
-//                if (lines.size() != 0) {
-//                    std::cout << "LINES DETECTED:\n\t" << lines.size() << std::endl ;
-//                }else{
-//                    std::cout << "No lines detected " << std::endl ;
-//                }
-//                Mat roiBGR ;
-//                cvtColor(thres_grad_y, roiBGR, CV_GRAY2BGR) ;
-//                for( size_t i = 0; i < lines.size(); i++ )
-//                {
-//                    Vec4i l = lines[i];
-//                    double theta1, theta2 , hyp ;
-//                    theta1 = (l[3]-l[1]);
-//                    theta2 = (l[2]-l[0]);
-//                    hyp = hypot(theta1,theta2);
-//                    if( hyp <= maxlineLength){
-//                        candidateLines.push_back(l) ;
-//                    }
-////                                putText(roiBGR, "Point1: ", Point(l[0], l[1]),  FONT_ITALIC, 0.25, Scalar(255,0,0));
-////                                putText(roiBGR, "Point2: ", Point(l[2], l[3]), FONT_ITALIC, 0.25, Scalar(0,255,0));
-////                    line( roiBGR, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-////                    //Red lines are all lines detected without maximum filtering
-//////                    line( roiBGR, Point(l[0]+offsetROI.x, l[1]+offsetROI.y),
-//////                         Point(l[2] +offsetROI.x, l[3]+offsetROI.y), Scalar(0,0,255), 3, CV_AA);
-////                    imshow("Sobel", roiBGR);
-////                    waitKey();
-//
-//                }
-//                std::cout << "Filtered Lines # " << candidateLines.size() << std::endl ;
-//
-//                for(int j = 0 ; j < 5 ; ++j){
-//                    for(size_t i =0 ; i < candidateLines.size() ; ++i){
-//                        Vec4i l = candidateLines[i] ;
-//                        //Draw green lines representing lines filtered out by maximum size
-//                        Point lineA(l[0], l[1]);
-//                        Point lineB(l[2], l[3]);
-//                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, CV_AA);
-//                        imshow("orig_frame_lines",roiBGR);
-//                        waitKey(5);
-//                        if(candidatesFrame[j].second.contains(lineA) &&candidatesFrame[j].second.contains(lineB)){
-//                            std::cout << "increasing score of" << std::endl ;
-//                            candidatesFrame[j].first += 100 ;
-//
-//                        }
-//
-//                    }
-//                }
-//                 greenLevel = 255 ;
-//                std::sort(candidatesFrame.begin(),candidatesFrame.begin()+5,comp);
-//                for(int j = 0 ; j < 5 ; ++j){
-//
-//                    if (j == 0){
-//
-//                        rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
-//                        putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br(), FONT_HERSHEY_PLAIN, 1, Scalar(255,0,0)) ;
-//                    }else{
-//
-//
-//                        //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
-//                        float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
-//                        //std::cout << "ratio " << ratio << std::endl ;
-//
-//                        greenLevel = greenLevel * (ratio) ;
-//                        rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
-//                    }
-//                }
+
+                std::vector<Vec4i> lines ;
+                std::vector<Vec4i> candidateLines ;
+                int lineThreshold = 15 , minLineLength = 9 , maxlineLength = 20 ;
+                Mat thres_grad_y ;
+                threshold(grad_y, thres_grad_y, 100, 255, THRESH_BINARY);
+                HoughLinesP(thres_grad_y, lines, 1, CV_PI/2, lineThreshold,minLineLength,0);
+                if (lines.size() != 0) {
+                    std::cout << "LINES DETECTED:\n\t" << lines.size() << std::endl ;
+                }else{
+                    std::cout << "No lines detected " << std::endl ;
+                }
+                Mat roiBGR ;
+                cvtColor(thres_grad_y, roiBGR, CV_GRAY2BGR) ;
+                for( size_t i = 0; i < lines.size(); i++ )
+                {
+                    Vec4i l = lines[i];
+                    double theta1, theta2 , hyp ;
+                    theta1 = (l[3]-l[1]);
+                    theta2 = (l[2]-l[0]);
+                    hyp = hypot(theta1,theta2);
+                    if( hyp <= maxlineLength){
+                        candidateLines.push_back(l) ;
+                }
+//                                putText(roiBGR, "Point1: ", Point(l[0], l[1]),  FONT_ITALIC, 0.25, Scalar(255,0,0));
+//                                putText(roiBGR, "Point2: ", Point(l[2], l[3]), FONT_ITALIC, 0.25, Scalar(0,255,0));
+//                    line( roiBGR, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
+//                    //Red lines are all lines detected without maximum filtering
+////                    line( roiBGR, Point(l[0]+offsetROI.x, l[1]+offsetROI.y),
+////                         Point(l[2] +offsetROI.x, l[3]+offsetROI.y), Scalar(0,0,255), 3, CV_AA);
+//                    imshow("Sobel", roiBGR);
+//                    waitKey();
+
+                }
+                std::cout << "Filtered Lines # " << candidateLines.size() << std::endl ;
+
+                for(int j = 0 ; j < candidatesFrame.size() ; ++j){
+                    for(size_t i =0 ; i < candidateLines.size() ; ++i){
+                        Vec4i l = candidateLines[i] ;
+                        //Draw green lines representing lines filtered out by maximum size
+                        Point lineA(l[0], l[1]);
+                        Point lineB(l[2], l[3]);
+                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, CV_AA);
+                        imshow("orig_frame_lines",roiBGR);
+                        waitKey(5);
+                        if(candidatesFrame[j].second.contains(lineA) &&candidatesFrame[j].second.contains(lineB)){
+                            std::cout << "increasing score of " << j << std::endl ;
+                            candidatesFrame[j].first += 100 ;
+
+                        }
+
+                    }
+                }
+                 greenLevel = 255 ;
+                std::sort(candidatesFrame.begin(),candidatesFrame.end(),comp);
+                for(int j = 0 ; j < 5 ; ++j){
+
+                    if (j == 0){
+
+                        rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+                        putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br(), FONT_HERSHEY_PLAIN, 1, Scalar(255,0,0)) ;
+                    }else{
+
+
+                        //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
+                        float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
+                        //std::cout << "ratio " << ratio << std::endl ;
+
+                        greenLevel = greenLevel * (ratio) ;
+                        rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+                    }
+                }
                  int stop_s=clock();
-//                imshow("Candidates_afterHORIZONAL", orig_frame);
+                imshow("Candidates_afterHORIZONAL", orig_frame);
                 objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
                 prevFrameDetection = candidatesFrame[0].second ;
                 waitKey();
