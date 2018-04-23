@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ProductGrade/configuration.hpp"
-            timestampString = "545793863.443084"
+            timestampString = "546062440.749884"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
+            startingLineNumber = "90"
+            endingLineNumber = "90"
             landmarkName = "movingWindowProperties"
             landmarkType = "14">
             <Locations>
@@ -58,13 +58,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ProductGrade/main_product_grade.cpp"
-            timestampString = "545793863.4431421"
+            timestampString = "546062440.750235"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "167"
-            endingLineNumber = "167"
-            landmarkName = "main(int argc, const char * argv[])"
-            landmarkType = "9">
+            startingLineNumber = "496"
+            endingLineNumber = "496">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -74,45 +72,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ProductGrade/main_product_grade.cpp"
-            timestampString = "545793863.443768"
+            timestampString = "546062440.750501"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
-            landmarkName = "main(int argc, const char * argv[])"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ProductGrade/main_product_grade.cpp"
-            timestampString = "545793863.444352"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "163"
-            endingLineNumber = "163"
-            landmarkName = "main(int argc, const char * argv[])"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ProductGrade/main_product_grade.cpp"
-            timestampString = "545793863.445074"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "245"
-            endingLineNumber = "245"
-            landmarkName = "main(int argc, const char * argv[])"
-            landmarkType = "9">
+            startingLineNumber = "480"
+            endingLineNumber = "480">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
