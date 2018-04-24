@@ -15,8 +15,8 @@ struct videoConfigProp{
     float bbound_largest_ratio  ;
     float bbound_smallest_ratio  ;
     int top_lane ; // chop of some sky
-    explicit videoConfigProp(cv::String n ,float largest, float smallest, int top=25): name(n),bbound_largest_ratio(largest),bbound_smallest_ratio(smallest),top_lane(top){}
-    
+    int remove_bottom ; // chops off the text and any protruding parts of the vehicle 
+    explicit videoConfigProp(cv::String n ,float largest, float smallest, int top=25, int bottom=100): name(n),bbound_largest_ratio(largest),bbound_smallest_ratio(smallest),top_lane(top),remove_bottom(bottom){}
 };
 
 
@@ -132,17 +132,17 @@ std::vector<cv::String> filenames = {"MIN50__1000000",
 //    "MIN50__1000001"
 //} ;
 
-std::vector<videoConfigProp> videoNames = {videoConfigProp("video1",3,4,100),
+std::vector<videoConfigProp> videoNames = { videoConfigProp("video6",3,4,100,140),
     videoConfigProp("video4",3,2,100),
-    videoConfigProp("video2",1.8,3,100),
-    videoConfigProp("video3",3,2,100),
-    videoConfigProp("video10",2,1.5,25),
-    
-    videoConfigProp("video6",3,4,100),
+    videoConfigProp("video2",1.8,3,100,125),
+    videoConfigProp("video3",1.8,2,100,125),
+    videoConfigProp("video10",2,2,25,125),
+    videoConfigProp("video1",3,4,100),
+   
     videoConfigProp("video7",3,4,100),
     videoConfigProp("video8",3,4,100),
     videoConfigProp("video9",3,4,100),
-    videoConfigProp("video5",3,2,100),
+    videoConfigProp("video5",3,4,100),
     videoConfigProp("video11",3,4,100),
     videoConfigProp("video12",3,4,100),
     videoConfigProp("video13",3,4,100),

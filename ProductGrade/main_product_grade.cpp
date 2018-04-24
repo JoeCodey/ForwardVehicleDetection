@@ -16,10 +16,22 @@
 
 using namespace cv ;
 
+void my_mouse_callback_Sobel(int event , int x , int y, int flags, void* params){
+    Mat* clickedImage = (Mat*) params ;
+    
+    switch( event ){
+        case CV_EVENT_MOUSEMOVE:
+            std::cout << int( clickedImage->at<uchar>(Point(x,y)) ) << std::endl ;
+            
+    }
+    
+}
+
 
 bool comp(std::pair<int,Rect>& i,std::pair<int,Rect>& j) {
     return i.first > j.first ;
 }
+String Path_demo = "/Users/josephlefebvre/Honours_Project/Demo/videoTest/" ;
 
 
 int imageWidth, imageHeight ;
@@ -68,7 +80,7 @@ int main(int argc, const char * argv[]) {
         lane_offset = 4 ;
         
         /* Create lane properties before entering video feed loop */
-        lane_coordinate lane = lane_coordinate(imageWidth,lane_offset,0.75,imageHeight-removeText,videoNames[vidId].top_lane) ;
+        lane_coordinate lane = lane_coordinate(imageWidth,lane_offset,0.75,imageHeight-videoNames[vidId].remove_bottom,videoNames[vidId].top_lane) ;
         
         trapMask = Mat::zeros(frameHeight, frameWidth, CV_8UC1) ;
         int npts[] = {4} ;
@@ -90,7 +102,7 @@ int main(int argc, const char * argv[]) {
         window.smallest_bbox_size = cvRound(lane.laneTopWidth/window.bbound_smallest_ratio) ;
         
         /* Store canny properties in struct (stored in configuration.hpp) */
-        cannyProperties canny_prop(100,150) ;
+        cannyProperties canny_prop(125,175) ;
         
         /* initial size of a bounding box */
         
@@ -121,9 +133,11 @@ int main(int argc, const char * argv[]) {
 //        if(StartKey == (int) 'n'){
 //            continue;
 //        }
+        
+        int start_s, stop_s ;
     while(frameId < numFrames ){
      
-        //orig_frame = imread(pathtoData+filenames[i]+".png") ;
+//        orig_frame = imread(pathtoData+filenames[i]+".png") ;
        
             cap >> orig_frame;
        
@@ -159,14 +173,24 @@ int main(int argc, const char * argv[]) {
 
 
                     //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
-                    float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
+                    
+                    float ratio ;
+                    if(candidatesFrame[j-1].first != 0 )
+                        ratio = candidatesFrame[j].first / candidatesFrame[j-1].first ;
                     //std::cout << "ratio " << ratio << std::endl ;
 
                     greenLevel = greenLevel * (ratio) ;
                     rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
                 }
+               
             }
+            videoMaker << orig_frame ;
+            std::cout << "FrameId: " << frameId << " added to output video " << vidId  << std::endl ;
+            frameId++ ;
+            imshow("Candidates_FromPreviousDetection",orig_frame) ;
             
+            waitKey(1);
+            continue ;
 
         //    imshow("Candidates", orig_frame) ;
             //waitKey(1) ;
@@ -192,7 +216,7 @@ int main(int argc, const char * argv[]) {
        // std::cout << "\n**** Reading Image at " << filenames[i] << " *******\n" << std::endl ;
 
             
-        int start_s=clock();
+       start_s=clock();
         // the code you wish to time goes here
 
 //        Mat orig_frame_difference = abs(gray_orig_frame - pixelDiffFrame);
@@ -224,17 +248,21 @@ int main(int argc, const char * argv[]) {
         Canny(lanes_pixel_diff,lanes_pixel_diff,canny_prop.minThreshold,canny_prop.maxThreshold) ;
                 imshow("lane_pixel_diff_w/canny", lanes_pixel_diff);
                 
-       // cannyEdges = abs(cannyEdges-lanes_pixel_diff) ;
+        cannyEdges = abs(cannyEdges-lanes_pixel_diff) ;
         
 //        imshow("cannyEdges_w/outPixelDiff", cannyEdges) ;
     
-        
-        /* Calculate sobel gradients of frame */
+                String path_grady = "/Users/josephlefebvre/Honours_Project/videoTest/video1/Sobel_grad_y" ;
+         /* Calculate sobel gradients of frame */
         Sobel( gray_lanes, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
         Sobel( gray_lanes, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
-
+                namedWindow("SOBEL");
+        setMouseCallback("SOBEL", my_mouse_callback_Sobel,(void*)& grad_y);
         convertScaleAbs( grad_x, grad_x );
         convertScaleAbs( grad_y, grad_y );
+                imshow("SOBEL", grad_y);
+                imshow("lanes_orig", lanes_orig_frame);
+        imwrite(path_grady+"grad_y.png", grad_y);
         addWeighted( grad_x, 0.5, grad_y, 0.5, 0, gradients_sobel ) ;
             
         //imshow("Sobel", gradients_sobel) ;
@@ -262,7 +290,14 @@ int main(int argc, const char * argv[]) {
         int scoreIndivWindow ;
 
         int totalScoreAllCandidates = 0 ;
-        
+                /* Increase candidate score if they posses a strong horizonatal line */
+                
+                
+                std::vector<Vec4i> lines ;
+                std::vector<Vec4i> candidateLines ;
+                
+                generateHorizontalLines(lines, candidateLines, grad_y,5);
+                
             waitKey(1) ; // Visual data while it is processed
                 int row_save = 0 ;
                 char controlKey ;
@@ -278,7 +313,7 @@ int main(int argc, const char * argv[]) {
                 Rect bboxWindow(col,row,window_n_cols,window_n_rows) ;
                 
                 if(trapMask.at<uchar>(bboxWindow.tl()+offsetROI) == 0 || trapMask.at<uchar>(Point(bboxWindow.tl().x+window_n_cols,bboxWindow.tl().y)+offsetROI) == 0)
-                    continue ;
+                    break ;
                 
                 Rect cannyWindow(col-window.bufferRegion,row-window.bufferRegion,window_n_cols+window.bufferRegion*2,
                                  window_n_rows+window.bufferRegion*2) ;
@@ -294,8 +329,20 @@ int main(int argc, const char * argv[]) {
                     cannyWindow.x = 0 ;
 
                  canny_of_window = cannyEdges(cannyWindow) ;
+                
                 scoreIndivWindow = objectness(canny_of_window,gradients_sobel, bboxWindow, Point(cannyWindow.x,cannyWindow.y), lanes_orig_frame,lanes_pixel_diff) ;
-                scoreIndivWindow += objectness(canny_of_window,grad_y, bboxWindow, Point(cannyWindow.x,cannyWindow.y), lanes_orig_frame,lanes_pixel_diff) ;
+                if(scoreIndivWindow == 0 ){
+                    window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
+                    window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
+                    continue ;
+                }
+                // if object score is greater than the average score so far, it has a change to be a top candidate
+                // therefore check if the candidate contains any strong horizontal lines
+               // if(scoreIndivWindow > totalScoreAllCandidates/(candidatesFrame.size()+1)) //
+                   scoreIndivWindow += containsHorizontalLine(candidateLines, bboxWindow, Point(bboxWindow.x,bboxWindow.y), grad_y) ;
+                
+                
+                
                 scoreCandidate = std::pair<int,Rect>(scoreIndivWindow,bboxWindow) ;
 
                 bestofthree[counter_bbox] = scoreCandidate ;
@@ -309,10 +356,9 @@ int main(int argc, const char * argv[]) {
                     counter_bbox = 0 ;
                     if( (bestofthree[max_among3].first != 0) &&
                       (bestofthree[max_among3].first > totalScoreAllCandidates/(candidatesFrame.size()+1) )){
+                        bestofthree[max_among3].first += containsHorizontalLine(candidateLines, bboxWindow, Point(bboxWindow.x,bboxWindow.y), gradients_sobel) ;
                         candidatesFrame.push_back(bestofthree[max_among3]);
                         totalScoreAllCandidates += bestofthree[max_among3].first ;
-                
-                        
                     }
                     max_among3 = 0 ;
                 }
@@ -321,19 +367,25 @@ int main(int argc, const char * argv[]) {
                 window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 
-                //controlKey = waitKey(1); // MANUAL_CONTROL OF BOX
+                //controlKey = waitKey(); // MANUAL_CONTROL OF BOX
                 
                 if(controlKey == 3){
                     row_save = row ;
                     col += window.stepSlide ;
                 }
-                if (controlKey == 2){
+                else if (controlKey == 2){
                     col -= window.stepSlide ;
                     row_save = row ;
                 }
-                if (controlKey == 1){
+                else if (controlKey == 1){
                     if( row + window.stepSlide*2 < lane.laneBottomWidth){
                         row += window.stepSlide*2 ;
+                    }
+                }else if (controlKey == (int) 'n'){
+                    if(controlKey == 110){
+                        row = lane.laneBottomWidth - window_n_rows ;
+                        col = lane.laneHeight - window_n_cols ;
+                        break;
                     }
                 }
 
@@ -363,58 +415,32 @@ int main(int argc, const char * argv[]) {
         std::sort(candidatesFrame.begin(),candidatesFrame.end()
                   ,comp );
 
-        int greenLevel = 255 ;
-        for(int j = 0 ; j < 5 ; ++j){
-
-            if (j == 0){
-                rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
-                putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br()+offsetROI, FONT_HERSHEY_PLAIN, 1, Scalar(255,0,0)) ;
-            }else{
-
-
-                //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
-                float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
-                //std::cout << "ratio " << ratio << std::endl ;
-
-                greenLevel = greenLevel * (ratio) ;
-                rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
-            }
-        }
-                imshow("Candidates", orig_frame);
+   
+//        for(int j = 0 ; j < 5 ; ++j){
+//
+//            if (j == 0){
+//                rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+//                putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br()+offsetROI, FONT_HERSHEY_PLAIN, 1, Scalar(255,0,0)) ;
+//            }else{
+//
+//
+//                //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
+//                float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
+//                //std::cout << "ratio " << ratio << std::endl ;
+//
+//                greenLevel = greenLevel * (ratio) ;
+//                rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
+//            }
+//        }
+//                imshow("Candidates_With_Simultaneous_line_Detection", orig_frame);
                 
                 
 
-       
-
-        objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
-            prevFrameDetection = candidatesFrame[0].second ;
-               waitKey();
+             
               /* Increase candidate score if they posses a strong horizonatal line */
                 
 
-                std::vector<Vec4i> lines ;
-                std::vector<Vec4i> candidateLines ;
-                int lineThreshold = 15 , minLineLength = 9 , maxlineLength = 20 ;
-                Mat thres_grad_y ;
-                threshold(grad_y, thres_grad_y, 100, 255, THRESH_BINARY);
-                HoughLinesP(thres_grad_y, lines, 1, CV_PI/2, lineThreshold,minLineLength,0);
-                if (lines.size() != 0) {
-                    std::cout << "LINES DETECTED:\n\t" << lines.size() << std::endl ;
-                }else{
-                    std::cout << "No lines detected " << std::endl ;
-                }
-                Mat roiBGR ;
-                cvtColor(thres_grad_y, roiBGR, CV_GRAY2BGR) ;
-                for( size_t i = 0; i < lines.size(); i++ )
-                {
-                    Vec4i l = lines[i];
-                    double theta1, theta2 , hyp ;
-                    theta1 = (l[3]-l[1]);
-                    theta2 = (l[2]-l[0]);
-                    hyp = hypot(theta1,theta2);
-                    if( hyp <= maxlineLength){
-                        candidateLines.push_back(l) ;
-                }
+
 //                                putText(roiBGR, "Point1: ", Point(l[0], l[1]),  FONT_ITALIC, 0.25, Scalar(255,0,0));
 //                                putText(roiBGR, "Point2: ", Point(l[2], l[3]), FONT_ITALIC, 0.25, Scalar(0,255,0));
 //                    line( roiBGR, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
@@ -424,59 +450,66 @@ int main(int argc, const char * argv[]) {
 //                    imshow("Sobel", roiBGR);
 //                    waitKey();
 
-                }
-                std::cout << "Filtered Lines # " << candidateLines.size() << std::endl ;
+                
+        
 
-                for(int j = 0 ; j < candidatesFrame.size() ; ++j){
-                    for(size_t i =0 ; i < candidateLines.size() ; ++i){
-                        Vec4i l = candidateLines[i] ;
-                        //Draw green lines representing lines filtered out by maximum size
-                        Point lineA(l[0], l[1]);
-                        Point lineB(l[2], l[3]);
-                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, CV_AA);
-                        imshow("orig_frame_lines",roiBGR);
-                        waitKey(5);
-                        if(candidatesFrame[j].second.contains(lineA) &&candidatesFrame[j].second.contains(lineB)){
-                            std::cout << "increasing score of " << j << std::endl ;
-                            candidatesFrame[j].first += 100 ;
-
-                        }
-
-                    }
-                }
-                 greenLevel = 255 ;
-                std::sort(candidatesFrame.begin(),candidatesFrame.end(),comp);
+//                for(int j = 0 ; j < candidatesFrame.size() ; ++j){
+//                    for(size_t i =0 ; i < candidateLines.size() ; ++i){
+//                        Vec4i l = candidateLines[i] ;
+//                        //Draw green lines representing lines filtered out by maximum size
+//                        Point lineA(l[0], l[1]);
+//                        Point lineB(l[2], l[3]);
+//                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, CV_AA);
+//                        imshow("orig_frame_lines",roiBGR);
+//                        waitKey(5);
+//                        if(candidatesFrame[j].second.contains(lineA) &&candidatesFrame[j].second.contains(lineB)){
+//                            std::cout << "increasing score of " << j << std::endl ;
+//                            candidatesFrame[j].first += 100 ;
+//
+//                        }
+//
+//                    }
+//                }
+        
+            }
+        
+            int greenLevel = 255 ;
+                //rstd::sort(candidatesFrame.begin(),candidatesFrame.end(),comp);
                 for(int j = 0 ; j < 5 ; ++j){
 
                     if (j == 0){
 
                         rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
-                        putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br(), FONT_HERSHEY_PLAIN, 1, Scalar(255,0,0)) ;
+                        putText(orig_frame, std::to_string(candidatesFrame[j].first), candidatesFrame[j].second.br()+offsetROI, FONT_HERSHEY_PLAIN, 3, Scalar(255,0,0)) ;
                     }else{
 
 
                         //std::cout << "J: " << j << " cand[j]: " << candidates[j].first << " cand[j-1] " << candidates[j].first << std::endl ;
-                        float ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
+                        float ratio ;
+                        if(candidatesFrame[j-1].first != 0)
+                            ratio =  candidatesFrame[j].first / candidatesFrame[j-1].first ;
+                        
                         //std::cout << "ratio " << ratio << std::endl ;
 
                         greenLevel = greenLevel * (ratio) ;
                         rectangle(orig_frame, candidatesFrame[j].second.tl()+offsetROI,candidatesFrame[j].second.br()+offsetROI, Scalar(0,greenLevel,0),1) ;
                     }
                 }
-                 int stop_s=clock();
+                 stop_s=clock();
+         objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
                 imshow("Candidates_afterHORIZONAL", orig_frame);
-                objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
+        
                 prevFrameDetection = candidatesFrame[0].second ;
-                waitKey();
+        
 
         std::cout << "time: " << (stop_s-start_s)/double(CLOCKS_PER_SEC)*1000 << std::endl;
         std::cout << "\n/***** End of Processing ****/ " << std::endl ;
                 
-                imshow("orig_frame2", lanes_orig_frame);
-         imshow("Candidates", orig_frame) ;
-        waitKey() ;
+               // imshow("orig_frame2", lanes_orig_frame);
+         //imshow("Candidates", orig_frame) ;
+         ;
 
-            }
+        
 
         
        
@@ -489,9 +522,10 @@ int main(int argc, const char * argv[]) {
                 frameId = numFrames;
                 vidId++;
             }
+         destroyAllWindows() ;
+    }
         
-        
-            destroyAllWindows() ;
+        destroyAllWindows() ; 
         }
         
     }
@@ -499,12 +533,10 @@ int main(int argc, const char * argv[]) {
     
     
     
+
     
     
     
     
     
-    
-    
-    
-}
+

@@ -24,10 +24,6 @@ void my_mouse_callback_Mag(int event , int x , int y, int flags, void* params){
     
 }
 
-
-
-
-
 String path_objectnessVis = "/Users/josephlefebvre/Honours_Project/Demo/" ;
 std::pair<int, int> nativeResolution(1440,900) ;
 
@@ -123,7 +119,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                     // Keep score of contour, don't remove if the point on the contours
                     // that is crossing the bounding box is of very low magnitue.
                     // will account for shadows and other small noise
-                    std::cout << "Contour saved " << std::endl ;
+                    //std::cout << "Contour saved " << std::endl ;
                     flag_score = false  ;
                     continue ;
                 }
@@ -153,12 +149,12 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
             }else{
                 if(flag_score ){
 //                    std::cout << pixelDifference_at_point << std::endl ;
-                    if(pixelDifference_at_point != 0){
-                        // std::cout << "moving object detected @ " << pointOnContour << std::endl ;
-                        circle(copy, pointOnContour_relativeToLanes, 6, Scalar(204,0,204));
-                        flag_score = false ;
-                        //break; // contour is part of an object that is moving really quickly
-                    }
+//                    if(pixelDifference_at_point != 0){
+//                        // std::cout << "moving object detected @ " << pointOnContour << std::endl ;
+//                        circle(copy, pointOnContour_relativeToLanes, 6, Scalar(204,0,204));
+//                        flag_score = false ;
+//                        //break; // contour is part of an object that is moving really quickly
+//                    }
                    
                     if (sobel_at_point > currentMax_IndivContour){
                         currentMax_IndivContour = sobel_at_point ;
@@ -211,4 +207,63 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
     return score ;
 }
 
+int containsHorizontalLine(std::vector<cv::Vec4i> candidateLines,cv::Rect bboxWindow, Point offset, cv::Mat& grad_y){
+    
+    namedWindow("Lines");
+    moveWindow("Lines",0, nativeResolution.second-grad_y.rows);
 
+    int numContainedLines = 0 ;
+    int score = 0 ;
+    int perimeter_boundbox = (bboxWindow.width*2) + (bboxWindow.height*2) ; // normalize the score of the line, so it can be compared with the size of the bounding box window it is being used in .
+    int increaseFactor = 100 ; // How much score will we add to candidates that contain a horizonal line
+    Mat canvas ;
+    grad_y.copyTo(canvas) ;
+    cvtColor(canvas, canvas, CV_GRAY2BGR);
+    for( int i = 0 ; i < candidateLines.size() ; ++i){
+        Vec4i l = candidateLines[i];
+        Point pt1 = Point(l[0],l[1]);
+        Point pt2 = Point(l[2],l[3]) ;
+        rectangle(canvas,bboxWindow,Scalar(255,0,0));
+        line(canvas, pt1, pt2, Scalar(0,0,255)) ;
+       
+        if( bboxWindow.contains(pt1) && bboxWindow.contains(pt2)){
+            numContainedLines++ ;
+            line(canvas, pt1, pt2, Scalar(0,255,0)) ;
+            LineIterator it(grad_y,pt1,pt2);
+            std::vector<Vec3b> buf(it.count);
+            for(int j = 0; j < it.count ; j++ , ++it){
+                Point pt = it.pos();
+                score += grad_y.at<uchar>(pt);
+            }
+        }
+    }
+    imshow("Lines", canvas) ;
+   // std::cout << "SCORE FROM LINES: " << score << std::endl ;
+   
+    
+    return score / perimeter_boundbox ;
+}
+
+void generateHorizontalLines(std::vector<cv::Vec4i>& lines,std::vector<cv::Vec4i>& filteredLines, Mat& verticalEdges,int lineThreshold,int minLength,int maxLength){
+    Mat thres_vertEdges ;
+    threshold(verticalEdges, thres_vertEdges, 150, 255, THRESH_BINARY);
+    
+    HoughLinesP(thres_vertEdges, lines, 1, CV_PI/2, lineThreshold,minLength,0);
+    
+    if (lines.size() != 0) {
+        std::cout << "LINES DETECTED:\n\t" << lines.size() << std::endl ;
+    }else{
+        std::cout << "No lines detected " << std::endl ;
+    }
+  
+    for( size_t i = 0; i < lines.size(); i++ )
+    {
+        Vec4i l = lines[i];
+        double theta1, theta2 , hyp ;
+        theta1 = (l[3]-l[1]);
+        theta2 = (l[2]-l[0]);
+        hyp = hypot(theta1,theta2);
+        if( hyp <= maxLength)
+            filteredLines.push_back(l) ;
+    }
+}
