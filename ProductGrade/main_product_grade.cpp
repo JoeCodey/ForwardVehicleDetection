@@ -49,7 +49,7 @@ int main(int argc, const char * argv[]) {
         }
         
         std::cout << "\n**** Reading Image at " << filenames[i] << " *******\n" << std::endl ;
-        
+        putText(orig_frame, "Press 's' to score objects", Point(107,360), FONT_HERSHEY_PLAIN, 2, Scalar(255,0,0));
         imshow("Orig_Frame", orig_frame) ;
         char StartKey = waitKey() ;
         if(StartKey == (int) 'n'){
@@ -93,11 +93,7 @@ int main(int argc, const char * argv[]) {
     
 //        imshow("lanes_orig_frame", lanes_orig_frame);
 //        waitKey() ;
-        
-        
-        
-        
-        
+
         /*Convert frame to gray*/
         
         cvtColor(lanes_orig_frame, gray_lanes, CV_BGR2GRAY) ;
@@ -256,27 +252,7 @@ int main(int argc, const char * argv[]) {
         std::cout << "\n/***** End of Processing ****/ " << std::endl ;
         waitKey() ;
         destroyAllWindows() ;
-        
-       
-        
-        
-    
-      
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     }
     
     
