@@ -120,7 +120,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                     // that is crossing the bounding box is of very low magnitue.
                     // will account for shadows and other small noise
                     //std::cout << "Contour saved " << std::endl ;
-                    flag_score = false  ;
+                    flag_score = true  ;
                     continue ;
                 }
                 
@@ -130,7 +130,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                 // ignore this contour line and remove from
                 // contours without crossings vector
                 //circle(contoursCannyNoCross, contours[i][0], 3, Scalar(0,255,0),1,8) ;
-                scoreIndivContour = 0 ; // Restet counter to zero for this contour
+                
                 //std::cout << "B: CONTOURs remaining " << contoursWithOutCrossings.size() << std::endl ;
                 //                if(! contours.empty()){
                 //                    contoursWithOutCrossings.pop_back() ;
@@ -165,6 +165,7 @@ int objectness(Mat& cannyEdges, Mat& sobelMagnitude, Rect bound_box, Point offse
                     circle(copy, pointOnContour_relativeToLanes, 1, Scalar(0,255,0));
                     scoreIndivContour += sobelMagnitude.at<uchar>(pointOnContour_relativeToLanes) ;
                 }else {
+                    scoreIndivContour = 0 ; // Restet counter to zero for this contour
                     circle(copy, pointOnContour_relativeToLanes, 1, Scalar(255,0 ,0));
                 }
             }

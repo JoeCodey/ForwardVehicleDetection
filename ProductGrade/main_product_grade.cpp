@@ -67,7 +67,7 @@ int main(int argc, const char * argv[]) {
         int frameHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
         int numFrames = cap.get(CV_CAP_PROP_FRAME_COUNT) ;
         
-        cv::VideoWriter videoMaker("/Users/josephlefebvre/Honours_Project/output_"+videoNames[vidId].name +".mp4",CV_FOURCC('M','P','4','V'),fpsVideo,cv::Size(frameWidth,frameHeight),1);
+        cv::VideoWriter videoMaker("/Users/josephlefebvre/Honours_Project/horizonalEVERY3frames/output_"+videoNames[vidId].name +".mp4",CV_FOURCC('M','P','4','V'),fpsVideo,cv::Size(frameWidth,frameHeight),1);
         
     Point offsetROI ;
     
@@ -85,8 +85,8 @@ int main(int argc, const char * argv[]) {
         trapMask = Mat::zeros(frameHeight, frameWidth, CV_8UC1) ;
         int npts[] = {4} ;
         fillPoly( trapMask, lane.ppts , npts, 1, Scalar( 255, 255, 255 ), 8 );
-//        imshow("TRAP_MASK",trapMask);
-//        waitKey();
+        imshow("TRAP_MASK",trapMask);
+        //waitKey();
         
         
         /* Now we need a default retangular ROI to contain the trapezoidal Mat */
@@ -147,13 +147,13 @@ int main(int argc, const char * argv[]) {
                 break ;
 //        Mat orig_frame_copy = orig_frame ;
 //
-//        imshow("orig_frame", orig_frame);
+        imshow("orig_frame", orig_frame);
        
 
 
 
 
-        if(frameId % 5 != 0){
+        if(frameId % 3 != 0){
             std::cout << "Skip frame " << frameId << std::endl ;
             int greenLevel = 255 ;
 //            Mat mask = Mat::zeros(orig_frame.rows, orig_frame.cols, CV_8UC1) ;
@@ -226,6 +226,8 @@ int main(int argc, const char * argv[]) {
 
        
         orig_frame.copyTo(lanes_orig_frame, trapMask) ;
+                imshow("lanesROI", lanes_orig_frame);
+                //waitKey();
         pixelDiffFrame.copyTo(lanes_pixel_diff,trapMask) ;
 
 
@@ -271,8 +273,7 @@ int main(int argc, const char * argv[]) {
 
         std::pair<int,Rect> scoreCandidate ;
         std::pair<int,Rect>  bestofthree [3] ;
-        int counter_bbox = 0 ;
-        int max_among3 = 0 ;
+        
 
         /* Linear equation for decreasing bounding_box size as we travel up the lane */
             // y = mx + b ,
@@ -303,7 +304,8 @@ int main(int argc, const char * argv[]) {
                 char controlKey ;
         for (int col = 0 ; col  <= lane.laneBottomWidth - window_n_cols; col += window.stepSlide){
             //std::cout << "outer loop" << std::endl ;
-
+            int counter_bbox = 0 ;
+            int max_among3 = 0 ;
             for (int row = lane.laneHeight ; row >= window.stepSlide ; row -= window.stepSlide){
                 if(controlKey == 3 || controlKey == 2){
                     row = row_save ;
