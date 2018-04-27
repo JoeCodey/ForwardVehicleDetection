@@ -215,7 +215,7 @@ int containsHorizontalLine(std::vector<cv::Vec4i> candidateLines,cv::Rect bboxWi
 
     int numContainedLines = 0 ;
     int score = 0 ;
-    int perimeter_boundbox = (bboxWindow.width*2) + (bboxWindow.height*2) ; // normalize the score of the line, so it can be compared with the size of the bounding box window it is being used in .
+    int perimeter_boundbox = (bboxWindow.width*2) + (bboxWindow.height*2) ; // normalize the score of the line, so it can be compared with the score generated using the objectness function .
     int increaseFactor = 100 ; // How much score will we add to candidates that contain a horizonal line
     Mat canvas ;
     grad_y.copyTo(canvas) ;

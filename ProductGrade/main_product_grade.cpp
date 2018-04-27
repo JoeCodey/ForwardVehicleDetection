@@ -85,9 +85,10 @@ int main(int argc, const char * argv[]) {
         trapMask = Mat::zeros(frameHeight, frameWidth, CV_8UC1) ;
         int npts[] = {4} ;
         fillPoly( trapMask, lane.ppts , npts, 1, Scalar( 255, 255, 255 ), 8 );
+        namedWindow("TRAP_MASK");
+        moveWindow("TRAP_MASK", 660, 0);
         imshow("TRAP_MASK",trapMask);
         //waitKey();
-        
         
         /* Now we need a default retangular ROI to contain the trapezoidal Mat */
         int width_roi = lane.laneBottomWidth ;
@@ -115,6 +116,8 @@ int main(int argc, const char * argv[]) {
         namedWindow("orig_frame2");
         moveWindow("orig_frame", 0,0);
         moveWindow("orig_frame2", 0,480);
+        namedWindow("lanesROI");
+        
         namedWindow("PixelDiffFrame");
         moveWindow("PixelDiffFrame", nativeResolution.first-imageWidth, 0);
         namedWindow("PixelDiffFrame_thres") ;
@@ -124,8 +127,6 @@ int main(int argc, const char * argv[]) {
         namedWindow("Sobel");
         moveWindow("Sobel", 0, imageHeight);
 
-       
-      
         //imshow("LAUNCH_POINT",Mat::zeros(imageHeight, imageWidth, CV_8UC1));
         
 //        char StartKey = waitKey() ;
@@ -226,6 +227,8 @@ int main(int argc, const char * argv[]) {
 
        
         orig_frame.copyTo(lanes_orig_frame, trapMask) ;
+                namedWindow("lanesROI");
+                moveWindow("lanesROI", 660, 200);
                 imshow("lanesROI", lanes_orig_frame);
                 //waitKey();
         pixelDiffFrame.copyTo(lanes_pixel_diff,trapMask) ;
@@ -248,23 +251,28 @@ int main(int argc, const char * argv[]) {
         Canny(gray_lanes,cannyEdges,canny_prop.minThreshold,canny_prop.maxThreshold) ;
 //       imshow("cannyEdges", cannyEdges);
         Canny(lanes_pixel_diff,lanes_pixel_diff,canny_prop.minThreshold,canny_prop.maxThreshold) ;
+                namedWindow("lane_pixel_diff_w/canny");
+                moveWindow("lane_pixel_diff_w/canny", imageWidth/2, imageHeight);
                 imshow("lane_pixel_diff_w/canny", lanes_pixel_diff);
+                
+        /* Subtract object moving rapidly between frames (i.e. stationary objects) from the cannyEdges */
                 
         cannyEdges = abs(cannyEdges-lanes_pixel_diff) ;
         
 //        imshow("cannyEdges_w/outPixelDiff", cannyEdges) ;
     
-                String path_grady = "/Users/josephlefebvre/Honours_Project/videoTest/video1/Sobel_grad_y" ;
+        String path_grady = "/Users/josephlefebvre/Honours_Project/videoTest/video1/Sobel_grad_y" ;
          /* Calculate sobel gradients of frame */
         Sobel( gray_lanes, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
         Sobel( gray_lanes, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
                 namedWindow("SOBEL");
+                moveWindow("SOBEL", 0, imageHeight);
         setMouseCallback("SOBEL", my_mouse_callback_Sobel,(void*)& grad_y);
         convertScaleAbs( grad_x, grad_x );
         convertScaleAbs( grad_y, grad_y );
                 imshow("SOBEL", grad_y);
-                imshow("lanes_orig", lanes_orig_frame);
-        imwrite(path_grady+"grad_y.png", grad_y);
+               // imshow("lanes_orig", lanes_orig_frame);
+        //imwrite(path_grady+"grad_y.png", grad_y);
         addWeighted( grad_x, 0.5, grad_y, 0.5, 0, gradients_sobel ) ;
             
         //imshow("Sobel", gradients_sobel) ;
@@ -364,7 +372,7 @@ int main(int argc, const char * argv[]) {
                     }
                     max_among3 = 0 ;
                 }
-                /* Calcualtion of a box complement, now we must decrease the size of the ROI
+                /* Calculation of a box size, now we must decrease the size of the ROI
                  as we move up the column (i.e. the lane ) of the frame */
                 window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
                 window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
