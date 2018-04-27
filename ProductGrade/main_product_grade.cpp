@@ -385,7 +385,7 @@ int main(int argc, const char * argv[]) {
 
         objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
             prevFrameDetection = candidatesFrame[0].second ;
-               waitKey();
+               //waitKey();
               /* Increase candidate score if they posses a strong horizonatal line */
                 
 //
@@ -464,14 +464,14 @@ int main(int argc, const char * argv[]) {
 //                imshow("Candidates_afterHORIZONAL", orig_frame);
                 objectness(cannyEdges, gradients_sobel, candidatesFrame[0].second, Point(0,0), lanes_orig_frame, lanes_pixel_diff) ;
                 prevFrameDetection = candidatesFrame[0].second ;
-                waitKey();
+                //waitKey();
 
         std::cout << "time: " << (stop_s-start_s)/double(CLOCKS_PER_SEC)*1000 << std::endl;
         std::cout << "\n/***** End of Processing ****/ " << std::endl ;
                 
                 imshow("orig_frame2", lanes_orig_frame);
          imshow("Candidates", orig_frame) ;
-        waitKey() ;
+        //waitKey() ;
 
             }
 
