@@ -102,7 +102,7 @@ int main(int argc, const char * argv[]) {
         window.smallest_bbox_size = cvRound(lane.laneTopWidth/window.bbound_smallest_ratio) ;
         
         /* Store canny properties in struct (stored in configuration.hpp) */
-        cannyProperties canny_prop(125,175) ;
+        cannyProperties canny_prop(50,150) ;
         
         /* initial size of a bounding box */
         
