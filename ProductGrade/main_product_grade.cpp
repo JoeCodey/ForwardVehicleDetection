@@ -7,7 +7,8 @@
 //
 
 #include <iostream>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
+#include "opencv2/opencv.hpp"
 //#include "data.hpp"
 #include "objectness.hpp"
 #include "configuration.hpp"
@@ -20,7 +21,7 @@ void my_mouse_callback_Sobel(int event , int x , int y, int flags, void* params)
     Mat* clickedImage = (Mat*) params ;
     
     switch( event ){
-        case CV_EVENT_MOUSEMOVE:
+        case EVENT_MOUSEMOVE:
             std::cout << int( clickedImage->at<uchar>(Point(x,y)) ) << std::endl ;
             
     }
@@ -31,13 +32,16 @@ void my_mouse_callback_Sobel(int event , int x , int y, int flags, void* params)
 bool comp(std::pair<int,Rect>& i,std::pair<int,Rect>& j) {
     return i.first > j.first ;
 }
-String Path_demo = "/Users/josephlefebvre/Honours_Project/Demo/videoTest/" ;
+// String Path_demo = "/Users/josephlefebvre/Honours_Project/Demo/videoTest/" ;
 
 
-int imageWidth, imageHeight ;
+// int imageWidth, imageHeight ;
 
 
 int main(int argc, const char * argv[]) {
+    
+    Mat black_test = Mat::zeros(250,250,CV_8UC1); 
+    imshow("include test", black_test);
     
     Mat orig_frame , gray_orig_frame;
     Mat orig_frame2, gray_orig_frame2;
@@ -62,12 +66,12 @@ int main(int argc, const char * argv[]) {
 
         Rect prevFrameDetection ; 
         
-        int fpsVideo = cap.get(CV_CAP_PROP_FPS) ;
-        int frameWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH) ;
-        int frameHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-        int numFrames = cap.get(CV_CAP_PROP_FRAME_COUNT) ;
+        int fpsVideo = cap.get(CAP_PROP_FPS) ;
+        int frameWidth = cap.get(CAP_PROP_FRAME_WIDTH) ;
+        int frameHeight = cap.get(CAP_PROP_FRAME_HEIGHT);
+        int numFrames = cap.get(CAP_PROP_FRAME_COUNT) ;
         
-        cv::VideoWriter videoMaker("/Users/josephlefebvre/Honours_Project/horizonalEVERY3frames/output_"+videoNames[vidId].name +".mp4",CV_FOURCC('M','P','4','V'),fpsVideo,cv::Size(frameWidth,frameHeight),1);
+        cv::VideoWriter videoMaker("/Users/josephlefebvre/Honours_Project/horizonalEVERY3frames/output_"+videoNames[vidId].name +".mp4", cv::VideoWriter::fourcc('m','p','4','v'),fpsVideo,cv::Size(frameWidth,frameHeight),1);
         
     Point offsetROI ;
     
@@ -75,8 +79,8 @@ int main(int argc, const char * argv[]) {
     //for(int i = 0 ; i < filenames.size() ; ++i){
         int frameId = 0 ;
       
-        imageHeight = frameHeight ;
-        imageWidth = frameWidth ;
+        int imageHeight = frameHeight ;
+        int imageWidth = frameWidth ;
         lane_offset = 4 ;
         
         /* Create lane properties before entering video feed loop */
@@ -190,7 +194,7 @@ int main(int argc, const char * argv[]) {
             frameId++ ;
             imshow("Candidates_FromPreviousDetection",orig_frame) ;
             
-            waitKey(1);
+            //waitKey(1);
             continue ;
 
         //    imshow("Candidates", orig_frame) ;
@@ -199,14 +203,14 @@ int main(int argc, const char * argv[]) {
 
             }else{
         
-        cvtColor(orig_frame, gray_orig_frame, CV_BGR2GRAY);
-        cvtColor(orig_frame2, gray_orig_frame2, CV_BGR2GRAY);
+        cvtColor(orig_frame, gray_orig_frame, COLOR_BGR2GRAY);
+        cvtColor(orig_frame2, gray_orig_frame2, COLOR_BGR2GRAY);
         
         pixelDiffFrame = cv::abs(gray_orig_frame2 - gray_orig_frame ) ;
         
         //imshow("PixelDiffFrame", pixelDiffFrame) ;
         //waitKey() ;
-        threshold(pixelDiffFrame, pixelDiffFrame, 150,255, CV_THRESH_BINARY);
+        threshold(pixelDiffFrame, pixelDiffFrame, 150,255, THRESH_BINARY);
        // imshow("PixelDiffFrame_thres", pixelDiffFrame) ;
         //waitKey();
 
@@ -241,7 +245,7 @@ int main(int argc, const char * argv[]) {
 
         /*Convert frame to gray*/
 
-        cvtColor(lanes_orig_frame, gray_lanes, CV_BGR2GRAY) ;
+        cvtColor(lanes_orig_frame, gray_lanes, COLOR_BGR2GRAY) ;
 
         /* Apply standard Guassian Blur filter */
         
@@ -307,7 +311,7 @@ int main(int argc, const char * argv[]) {
                 
                 generateHorizontalLines(lines, candidateLines, grad_y,5);
                 
-            waitKey(1) ; // Visual data while it is processed
+            //waitKey(1) ; // Visual data while it is processed
                 int row_save = 0 ;
                 char controlKey ;
         for (int col = 0 ; col  <= lane.laneBottomWidth - window_n_cols; col += window.stepSlide){
@@ -341,11 +345,13 @@ int main(int argc, const char * argv[]) {
                  canny_of_window = cannyEdges(cannyWindow) ;
                 
                 scoreIndivWindow = objectness(canny_of_window,gradients_sobel, bboxWindow, Point(cannyWindow.x,cannyWindow.y), lanes_orig_frame,lanes_pixel_diff) ;
+                
                 if(scoreIndivWindow == 0 ){
                     window_n_cols  =  m*(row - window.stepSlide) + window.smallest_bbox_size ;
                     window_n_rows = m*(row - window.stepSlide) + window.smallest_bbox_size ;
                     continue ;
                 }
+            
                 // if object score is greater than the average score so far, it has a change to be a top candidate
                 // therefore check if the candidate contains any strong horizontal lines
                // if(scoreIndivWindow > totalScoreAllCandidates/(candidatesFrame.size()+1)) //
@@ -360,7 +366,7 @@ int main(int argc, const char * argv[]) {
                 if(scoreIndivWindow > bestofthree[max_among3].first)
                     max_among3 = counter_bbox ;
                 counter_bbox++;
-
+                
                 if (counter_bbox == 3){
                     // reset counter which counts every third candidate checked.
                     counter_bbox = 0 ;
@@ -453,10 +459,10 @@ int main(int argc, const char * argv[]) {
 
 //                                putText(roiBGR, "Point1: ", Point(l[0], l[1]),  FONT_ITALIC, 0.25, Scalar(255,0,0));
 //                                putText(roiBGR, "Point2: ", Point(l[2], l[3]), FONT_ITALIC, 0.25, Scalar(0,255,0));
-//                    line( roiBGR, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
+//                    line( roiBGR, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, AA);
 //                    //Red lines are all lines detected without maximum filtering
 ////                    line( roiBGR, Point(l[0]+offsetROI.x, l[1]+offsetROI.y),
-////                         Point(l[2] +offsetROI.x, l[3]+offsetROI.y), Scalar(0,0,255), 3, CV_AA);
+////                         Point(l[2] +offsetROI.x, l[3]+offsetROI.y), Scalar(0,0,255), 3, AA);
 //                    imshow("Sobel", roiBGR);
 //                    waitKey();
 
@@ -469,7 +475,7 @@ int main(int argc, const char * argv[]) {
 //                        //Draw green lines representing lines filtered out by maximum size
 //                        Point lineA(l[0], l[1]);
 //                        Point lineB(l[2], l[3]);
-//                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, CV_AA);
+//                        line( roiBGR, lineA,lineB, Scalar(0,255,0), 1, AA);
 //                        imshow("orig_frame_lines",roiBGR);
 //                        waitKey(5);
 //                        if(candidatesFrame[j].second.contains(lineA) &&candidatesFrame[j].second.contains(lineB)){

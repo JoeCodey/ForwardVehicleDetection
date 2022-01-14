@@ -11,7 +11,7 @@
 #ifndef objectness_hpp
 #define objectness_hpp
 
-#include <opencv2/opencv.hpp>
+#include "opencv2/opencv.hpp"
 
 extern std::pair<int, int> nativeResolution ;
 

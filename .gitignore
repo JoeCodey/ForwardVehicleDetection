@@ -35,5 +35,13 @@ ProductGrade.xcodeproj/xcuserdata/josephlefebvre.xcuserdatad/xcdebugger/Breakpoi
 !*.xcworkspace/contents.xcworkspacedata
 /*.gcno
 
+#vscode config files 
+.vscode/ 
+fvd.code-workspace 
+bin/
 
 # End of https://www.gitignore.io/api/xcode
+.editorconfig
+ProductGrade/main_ex*
+ProductGrade/main_product_grade
+ProductGrade/main_product_grade.dSYM/
